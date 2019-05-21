@@ -8,7 +8,6 @@ package com.imos.jtp;
 import com.imos.jtp.support.SecondValidation;
 import com.imos.jtp.support.FirstValidation;
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -36,7 +35,6 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.joor.ReflectException;
 
 /**
  *
@@ -47,8 +45,6 @@ public class JavaCodeGenerator {
     public boolean jacksonProperty = false;
     public String folderPath = "";
     private String javaFileAP;
-    private String javaClassAP;
-    private String classPath;
 
     public void generate(SchemaData schemaData, String folderPath) {
         try {
@@ -62,8 +58,6 @@ public class JavaCodeGenerator {
                 }
                 new File(this.folderPath).mkdirs();
             }
-            this.classPath = this.folderPath;
-
             TypeSpec.Builder jsonPOJOBuilder = TypeSpec.classBuilder(schemaData.getClassName())
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Getter.class)
@@ -84,9 +78,8 @@ public class JavaCodeGenerator {
             String name = schemaData.getPackageName() + "." + schemaData.getClassName();
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             javaFileAP = ((this.folderPath + File.separator + name).replaceAll("\\.", File.separator)) + ".java";
-            javaClassAP = ((this.folderPath + File.separator + name).replaceAll("\\.", File.separator)) + ".class";
             compiler.run(null, null, null, new File(javaFileAP).getAbsolutePath());
-        } catch (IOException | ReflectException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -95,9 +88,9 @@ public class JavaCodeGenerator {
         try {
             AnnotationSpec jsonFieldAnnoSpec = null;
             if (jacksonProperty) {
-                jsonFieldAnnoSpec = AnnotationSpec.builder(JsonProperty.class)
-                        .addMember(JSONKeys.VALUE, CodeBlock.of("$S", data.getJsonFieldName()))
-                        .build();
+//                jsonFieldAnnoSpec = AnnotationSpec.builder(JsonProperty.class)
+//                        .addMember(JSONKeys.VALUE, CodeBlock.of("$S", data.getJsonFieldName()))
+//                        .build();
             } else {
                 jsonFieldAnnoSpec = AnnotationSpec.builder(JSONField.class)
                         .addMember(JSONKeys.JSON_FIELD_NAME, CodeBlock.of("$S", data.getJsonFieldName()))
