@@ -19,7 +19,7 @@ import org.json.JSONObject;
  */
 public class JSONTOPOJO {
 
-    private static final boolean PROD_MODE = false;
+    private static final boolean PROD_MODE = true;
     private static String jsonFileName;
     private static String packageFolderPath;
 
@@ -35,7 +35,7 @@ public class JSONTOPOJO {
                     System.out.println("Enter: <JSON File> <Package folder>");
                     return;
                 }
-                if (".".equals(args[1])) {
+                if (".".equals(args[1]) || "".equals(args[1])) {
                     packageFolderPath = System.getProperty("user.dir");
                 } else {
                     packageFolderPath = System.getProperty("user.dir") + File.separator + args[1];
@@ -43,24 +43,38 @@ public class JSONTOPOJO {
                 if (!new File(packageFolderPath).exists()) {
                     System.out.println("Enter: <JSON File> <Package folder>");
                     return;
-                } else{
+                } else {
                     new File(packageFolderPath).mkdirs();
                 }
             } else {
                 jsonFileName = "src/main/resources/inputSchema.json";
-//                packageFolderPath = "src/main/java";
+                packageFolderPath = "src/main/java";
                 packageFolderPath = "src/main/java/test";
             }
 
             String strData = new String(Files.readAllBytes(Paths.get(jsonFileName)));
             JSONObject json = new JSONObject(strData);
             JSONObject jsonData = json.getJSONObject("data");
-            String packageName = json.getString("package");
+            String packageName = json.getString("package_name");
+            String className = json.getString("class_name");
             boolean validationRequired = json.optBoolean("validation");
-            new JSONParser(packageFolderPath).parseJSONObject(jsonData, packageName, "WarrantyRegistrationResponse", validationRequired);
+            new JSONParser(packageFolderPath).parseJSONObject(jsonData, packageName, className, validationRequired);
+            deleteClassFiles(new File(packageFolderPath));
             Thread.sleep(5000);
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(JSONTOPOJO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private static void deleteClassFiles(File folder) {
+        if (folder.isDirectory()) {
+            for (File file : folder.listFiles()) {
+                if (file.isDirectory()) {
+                    deleteClassFiles(file);
+                } else if (file.getName().endsWith(".class")) {
+                    file.delete();
+                }
+            }
         }
     }
 
