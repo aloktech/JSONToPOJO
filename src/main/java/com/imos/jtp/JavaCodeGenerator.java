@@ -121,6 +121,7 @@ public class JavaCodeGenerator {
                             if (schemaData.isValidationRequired()) {
                                 notNull = AnnotationSpec.builder(NotNull.class)
                                         .addMember("message", CodeBlock.of("$S", "{" + data.getJsonFieldName().replaceAll("_", "\\.") + "}"))
+                                        .addMember("groups", CodeBlock.of("$T.class", FirstValidation.class))
                                         .build();
                                 AnnotationSpec valid = AnnotationSpec.builder(Valid.class)
                                         .build();
