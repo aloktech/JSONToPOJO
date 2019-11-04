@@ -9,8 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 /**
@@ -19,6 +19,7 @@ import org.json.JSONObject;
  */
 public class JSONTOPOJO {
 
+    private static final Logger LOG = LogManager.getLogger(JSONTOPOJO.class);
     private static final boolean PROD_MODE = true;
     private static String jsonFileName;
     private static String packageFolderPath;
@@ -26,6 +27,7 @@ public class JSONTOPOJO {
     public static void main(String[] args) {
         try {
             if (PROD_MODE) {
+                LOG.info("POJO Class generation started");
                 if (args.length != 2) {
                     System.out.println("Enter: <JSON File> <Package folder>");
                     return;
@@ -60,19 +62,23 @@ public class JSONTOPOJO {
             boolean validationRequired = json.optBoolean("validation");
             new JSONParser(packageFolderPath).parseJSONObject(jsonData, packageName, className, validationRequired);
             deleteClassFiles(new File(packageFolderPath));
-            Thread.sleep(5000);
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(JSONTOPOJO.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.info("All generated *.class files are deleted");
+            LOG.info("All POJO Class are generated successfully");
+        } catch (IOException ex) {
+            LOG.error(ex.getMessage());
         }
     }
 
     private static void deleteClassFiles(File folder) {
         if (folder.isDirectory()) {
-            for (File file : folder.listFiles()) {
-                if (file.isDirectory()) {
-                    deleteClassFiles(file);
-                } else if (file.getName().endsWith(".class")) {
-                    file.delete();
+            File[] subFile = folder.listFiles();
+            if (subFile != null) {
+                for (File file : subFile) {
+                    if (file.isDirectory()) {
+                        deleteClassFiles(file);
+                    } else if (file.getName().endsWith(".class")) {
+                        file.delete();
+                    }
                 }
             }
         }

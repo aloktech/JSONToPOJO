@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import lombok.extern.log4j.Log4j2;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +20,7 @@ import org.json.JSONObject;
  *
  * @author alok.meher
  */
+@Log4j2
 public class JSONParser {
     
     private final String folderPath;
@@ -39,8 +41,8 @@ public class JSONParser {
                 Object value = array.get(i);
                 checkDataType(packageName, value, className, keys, validationRequired);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (JSONException e) {
+           log.error(e.getMessage());
         } finally {
             lock.unlock();
         }
@@ -62,6 +64,7 @@ public class JSONParser {
             schemaData.setValidationRequired(validationRequired);
             generator.generate(schemaData, folderPath);
         } catch (Exception e) {
+            log.error(e.getMessage());
         } finally {
             lock.unlock();
         }
@@ -104,7 +107,8 @@ public class JSONParser {
                     keys.add(keyData);
                     break;
             }
-        } catch (Exception e) {
+        } catch (JSONException e) {
+            log.error(e.getMessage());
         } finally {
             lock.unlock();
         }

@@ -1,0 +1,19 @@
+{
+    "package_name": "com.imos.sample",
+    "class_name": "SampleClass",
+    "validation": true,
+    "data": {
+        "sample_one": {
+            "sample_one_one": 219186,
+            "sample_one_two": "Dummy Data",
+            "sample_one_three": true
+        },
+        "sample_two": "Dummy Data",
+        "sample_three": [{
+                "sample_three_one": true,
+                "sample_three_two": "Dummy Data",
+                "sample_three_three": 12.9
+            }]
+    }
+}
+

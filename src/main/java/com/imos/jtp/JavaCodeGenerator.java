@@ -35,26 +35,26 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 
 /**
  *
  * @author alok.meher
  */
+@Log4j2
 public class JavaCodeGenerator {
 
     public boolean jacksonProperty = false;
     public String folderPath = "";
-    private String javaFileAP;
 
     public void generate(SchemaData schemaData, String folderPath) {
         try {
             if (new File(folderPath).exists()) {
                 this.folderPath = folderPath;
             } else {
-                if ("".equals(folderPath) || ".".equals(folderPath)) {
-                    this.folderPath = System.getProperty("user.dir");
-                } else {
-                    this.folderPath = System.getProperty("user.dir") + File.separator + folderPath;
+                this.folderPath = System.getProperty("user.dir");
+                if (!"".equals(folderPath) && !".".equals(folderPath)) {
+                    this.folderPath += File.separator + folderPath;
                 }
                 new File(this.folderPath).mkdirs();
             }
@@ -77,10 +77,14 @@ public class JavaCodeGenerator {
 
             String name = schemaData.getPackageName() + "." + schemaData.getClassName();
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            javaFileAP = ((this.folderPath + File.separator + name).replaceAll("\\.", File.separator)) + ".java";
-            compiler.run(null, null, null, new File(javaFileAP).getAbsolutePath());
+            String finalFilePath = this.folderPath + File.separator + name;
+            String classFilePath = finalFilePath.substring(0, finalFilePath.lastIndexOf(File.separator));
+            String packageFilePath = finalFilePath.substring(finalFilePath.lastIndexOf(File.separator));
+            packageFilePath = packageFilePath.replaceAll("\\.", File.separator);
+            finalFilePath = classFilePath + packageFilePath + ".java";
+            compiler.run(null, null, null, finalFilePath);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -108,8 +112,8 @@ public class JavaCodeGenerator {
                                 ClassLoader loader = URLClassLoader.newInstance(new URL[]{classFile.toURI().toURL()}, getClass().getClassLoader());
                                 Class<?> cls = loader.loadClass(data.getDataType().getClassPackage() + "." + toCamelCaseForClass(data.getKeyName()));
                                 fieldBuilder = FieldSpec.builder(cls, data.getKeyName());
-                                
-                                  if (schemaData.isValidationRequired()) {
+
+                                if (schemaData.isValidationRequired()) {
                                     notNull = AnnotationSpec.builder(NotNull.class)
                                             .addMember("message", CodeBlock.of("$S", "{" + data.getJsonFieldName().replaceAll("_", "\\.") + "}"))
                                             .addMember("groups", CodeBlock.of("$T.class", FirstValidation.class))
@@ -120,7 +124,7 @@ public class JavaCodeGenerator {
                                     fieldBuilder = fieldBuilder.addAnnotation(notNull);
                                 }
                             } catch (Exception ex) {
-                                ex.printStackTrace();
+                                log.error(ex.getMessage());
                             }
                             break;
                         case STRING:
@@ -149,7 +153,7 @@ public class JavaCodeGenerator {
                     typeName = ParameterizedTypeName.get(List.class, cls);
                     fieldBuilder = FieldSpec.builder(typeName, data.getKeyName());
                 } catch (MalformedURLException ex) {
-                    Logger.getLogger(JavaCodeGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    log.error(ex.getMessage());
                 }
             } else {
                 fieldBuilder = FieldSpec.builder(typeName, data.getKeyName());
@@ -163,7 +167,7 @@ public class JavaCodeGenerator {
             }
 
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
