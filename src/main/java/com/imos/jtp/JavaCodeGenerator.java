@@ -104,25 +104,25 @@ public class JavaCodeGenerator {
                     switch (data.getDataType()) {
                         case OBJECT:
                             try {
-                                File classFile = new File(System.getProperty("user.dir") + File.separator + this.folderPath);
+                                File classFile = new File(this.folderPath);
                                 ClassLoader loader = URLClassLoader.newInstance(new URL[]{classFile.toURI().toURL()}, getClass().getClassLoader());
-                                fieldBuilder = FieldSpec.builder(Class.forName(data.getDataType().getClassPackage() + "." + toCamelCaseForClass(data.getKeyName()), true, loader), data.getKeyName());
+                                Class<?> cls = loader.loadClass(data.getDataType().getClassPackage() + "." + toCamelCaseForClass(data.getKeyName()));
+                                fieldBuilder = FieldSpec.builder(cls, data.getKeyName());
+                                
+                                  if (schemaData.isValidationRequired()) {
+                                    notNull = AnnotationSpec.builder(NotNull.class)
+                                            .addMember("message", CodeBlock.of("$S", "{" + data.getJsonFieldName().replaceAll("_", "\\.") + "}"))
+                                            .addMember("groups", CodeBlock.of("$T.class", FirstValidation.class))
+                                            .build();
+                                    AnnotationSpec valid = AnnotationSpec.builder(Valid.class)
+                                            .build();
+                                    fieldBuilder = fieldBuilder.addAnnotation(valid);
+                                    fieldBuilder = fieldBuilder.addAnnotation(notNull);
+                                }
                             } catch (Exception ex) {
                                 ex.printStackTrace();
                             }
-
-                            if (schemaData.isValidationRequired()) {
-                                notNull = AnnotationSpec.builder(NotNull.class)
-                                        .addMember("message", CodeBlock.of("$S", "{" + data.getJsonFieldName().replaceAll("_", "\\.") + "}"))
-                                        .addMember("groups", CodeBlock.of("$T.class", FirstValidation.class))
-                                        .build();
-                                AnnotationSpec valid = AnnotationSpec.builder(Valid.class)
-                                        .build();
-                                fieldBuilder = fieldBuilder.addAnnotation(valid);
-                                fieldBuilder = fieldBuilder.addAnnotation(notNull);
-                            }
                             break;
-
                         case STRING:
                             fieldBuilder = FieldSpec.builder(String.class, data.getKeyName());
                             if (schemaData.isValidationRequired()) {
@@ -141,16 +141,16 @@ public class JavaCodeGenerator {
                     }
                 }
             } else if (typeName instanceof ParameterizedTypeName) {
-                File classFile = new File(System.getProperty("user.dir") + File.separator + this.folderPath);
+                File classFile = new File(this.folderPath);
                 ClassLoader loader;
                 try {
                     loader = URLClassLoader.newInstance(new URL[]{classFile.toURI().toURL()}, getClass().getClassLoader());
-                    typeName = ParameterizedTypeName.get(List.class, Class.forName(data.getDataType().getClassPackage() + "." + toCamelCaseForClass(data.getKeyName()), true, loader));
+                    Class<?> cls = loader.loadClass(data.getDataType().getClassPackage() + "." + toCamelCaseForClass(data.getKeyName()));
+                    typeName = ParameterizedTypeName.get(List.class, cls);
                     fieldBuilder = FieldSpec.builder(typeName, data.getKeyName());
                 } catch (MalformedURLException ex) {
                     Logger.getLogger(JavaCodeGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
             } else {
                 fieldBuilder = FieldSpec.builder(typeName, data.getKeyName());
             }
