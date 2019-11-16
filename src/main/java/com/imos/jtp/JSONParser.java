@@ -22,16 +22,15 @@ import org.json.JSONObject;
  */
 @Log4j2
 public class JSONParser {
-    
+
     private final String folderPath;
     private final JavaCodeGenerator generator;
+    private Lock lock = new ReentrantLock();
 
     public JSONParser(String folderPath) {
         this.folderPath = folderPath;
         generator = new JavaCodeGenerator();
     }
-
-    Lock lock = new ReentrantLock();
 
     private void parseJSONArray(JSONArray array, String packageName, String className, boolean validationRequired) {
         lock.lock();
@@ -42,7 +41,7 @@ public class JSONParser {
                 checkDataType(packageName, value, className, keys, validationRequired);
             }
         } catch (JSONException e) {
-           log.error(e.getMessage());
+            log.error(e.getMessage());
         } finally {
             lock.unlock();
         }
@@ -63,6 +62,7 @@ public class JSONParser {
             schemaData.setJsonKeys(keys);
             schemaData.setValidationRequired(validationRequired);
             generator.generate(schemaData, folderPath);
+            generator.generateValidator(schemaData);
         } catch (Exception e) {
             log.error(e.getMessage());
         } finally {

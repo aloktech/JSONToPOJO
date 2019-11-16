@@ -47,6 +47,32 @@ public class JavaCodeGenerator {
     public boolean jacksonProperty = false;
     public String folderPath = "";
 
+    public void generateValidator(SchemaData schemaData) {
+        TypeSpec.Builder jsonPOJOBuilder = TypeSpec.interfaceBuilder("FirstValidation")
+                .addModifiers(Modifier.PUBLIC)
+                .addSuperinterface(Serializable.class);
+        TypeSpec javaPOJO = jsonPOJOBuilder.build();
+        JavaFile javaFile = JavaFile.builder(schemaData.getPackageName() + ".validator", javaPOJO)
+                .build();
+        try {
+            javaFile.writeTo(new File(this.folderPath));
+        } catch (IOException ex) {
+            Logger.getLogger(JavaCodeGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        jsonPOJOBuilder = TypeSpec.interfaceBuilder("SecondValidation")
+                .addModifiers(Modifier.PUBLIC)
+                .addSuperinterface(Serializable.class);
+        javaPOJO = jsonPOJOBuilder.build();
+        javaFile = JavaFile.builder(schemaData.getPackageName() + ".validator", javaPOJO)
+                .build();
+        try {
+            javaFile.writeTo(new File(this.folderPath));
+        } catch (IOException ex) {
+            Logger.getLogger(JavaCodeGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void generate(SchemaData schemaData, String folderPath) {
         try {
             if (new File(folderPath).exists()) {
